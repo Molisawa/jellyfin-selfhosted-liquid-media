@@ -1,0 +1,39 @@
+# Secretos / entorno local
+.env
+.env.*
+!.env.example
+*.env.local
+
+# Overrides personales de compose (los de GPU/VPN versionados no empiezan así)
+docker-compose.override.yml
+
+# Datos y configuraciones generadas
+dev-data/
+data/
+config/
+
+# Certificados
+*.pem
+*.key
+*.crt
+
+# Respaldos de volúmenes (contienen tokens/usuarios)
+*.tgz
+
+# Logs
+*.log
+logs/
+
+# Herramientas locales de agentes (skills instaladas, settings locales)
+.agents/
+.claude/
+skills-lock.json
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Briefs internos del proyecto (solo locales)
+docs/arquitectura_stack_docker_y_reverse_proxy.md
+docs/especificaci_n_ui_apple_liquid_glass_para_jellyfin.md
+docs/prompt_maestro_e_instrucciones_para_claude.md

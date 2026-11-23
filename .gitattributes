@@ -1,0 +1,17 @@
+# Todo texto en LF (evita que Windows rompa scripts/configs con CRLF al clonar)
+* text=auto eol=lf
+
+*.sh       text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.css      text eol=lf
+*.md       text eol=lf
+Caddyfile  text eol=lf
+.env*      text eol=lf
+
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.gif  binary
+*.ico  binary

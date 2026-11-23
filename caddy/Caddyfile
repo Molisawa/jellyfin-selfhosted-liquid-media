@@ -1,0 +1,29 @@
+# DOMAIN=localhost      -> Caddy usa su CA interna (TLS local, sin Let's Encrypt).
+# DOMAIN=tu-dominio.tld -> certificados Let's Encrypt automáticos.
+# Solo Jellyfin y Seerr son públicos. Sonarr/Radarr/Prowlarr/qBittorrent NO pasan por aquí.
+{
+	email {$ACME_EMAIL}
+}
+
+watch.{$DOMAIN} {
+	# Tema Liquid Glass servido desde ./theme (en Jellyfin: @import url("/custom-theme/liquid-glass.css");)
+	handle_path /custom-theme/* {
+		root * /srv/theme
+		header Cache-Control "no-cache"
+		file_server
+	}
+
+	handle {
+		# Caddy ya maneja WebSockets y añade X-Forwarded-For/-Proto/-Host.
+		reverse_proxy jellyfin:8096 {
+			header_up X-Real-IP {remote_host}
+			flush_interval -1 # sin buffering: streaming fluido
+		}
+	}
+}
+
+request.{$DOMAIN} {
+	reverse_proxy seerr:5055 {
+		header_up X-Real-IP {remote_host}
+	}
+}

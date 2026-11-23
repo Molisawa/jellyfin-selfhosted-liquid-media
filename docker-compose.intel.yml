@@ -1,0 +1,6 @@
+# Transcoding Intel QuickSync / VAAPI. Solo Linux nativo: /dev/dri no existe en WSL2 ni en macOS.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.intel.yml up -d
+services:
+  jellyfin:
+    devices:
+      - /dev/dri:/dev/dri

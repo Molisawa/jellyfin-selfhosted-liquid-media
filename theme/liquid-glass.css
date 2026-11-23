@@ -1,0 +1,421 @@
+/*
+ * Liquid Glass — tema para Jellyfin Web
+ * Probado contra Jellyfin 12.4 (selectores leídos del bundle de jellyfin-web, no inventados).
+ * Sin fuentes ni íconos de Apple: pila de fuentes del sistema + Material Icons de Jellyfin.
+ * El dashboard de admin queda nativo: Jellyfin no carga CSS personalizado ahí a propósito
+ * (si el tema se rompe, el panel de configuración sigue funcionando).
+ *
+ * Índice: 1 tokens · 2 paleta Jellyfin · 3 base · 4 superficies glass · 5 header · 6 drawer
+ *         7 tarjetas · 8 detalles · 9 OSD · 10 login · 11 botones/inputs · 12 accesibilidad
+ */
+
+/* 1. TOKENS ─────────────────────────────────────────────── */
+:root {
+  --lg-blur: 28px;
+  --lg-saturate: 180%;
+  --lg-brightness: 1.08;
+  --lg-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness));
+  --lg-filter-sm: blur(12px) saturate(160%);
+
+  --lg-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%);
+  --lg-bg-hover: rgba(255, 255, 255, 0.22);
+  --lg-border-color: rgba(255, 255, 255, 0.18);
+  --lg-hairline: rgba(255, 255, 255, 0.12);
+  --lg-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.25),
+    0 12px 32px rgba(0, 0, 0, 0.45);
+
+  --lg-base: #050507;
+  --lg-base-2: #0b0c10;
+  --lg-white: #ffffff;
+  --lg-accent: #0a84ff;
+
+  --lg-r-card: 16px;
+  --lg-r-panel: 24px;
+  --lg-r-pill: 9999px;
+  --lg-gap: 12px;
+
+  --lg-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --lg-dur: 0.45s;
+  --lg-hover-scale: 1.03;
+
+  --lg-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+  --lg-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+/* 2. PALETA JELLYFIN ─────────────────────────────────────
+   Jellyfin 12 colorea casi todo con variables --jf-*. Redefinirlas es más
+   robusto que pisar selectores. :root:root gana a la hoja del tema base. */
+:root:root {
+  --jf-palette-background-default: var(--lg-base);
+  --jf-palette-background-defaultImage: radial-gradient(120% 80% at 50% -10%, #1a1c24 0%, var(--lg-base-2) 45%, var(--lg-base) 100%);
+  --jf-palette-background-paper: #1c1c1e;
+  --jf-palette-background-paperChannel: 28 28 30;
+  --jf-palette-primary-main: var(--lg-white);           /* botón primario blanco estilo "Reproducir" */
+  --jf-palette-primary-dark: rgba(255, 255, 255, 0.82);
+  --jf-palette-primary-contrastText: #000;
+  --jf-palette-secondary-main: var(--lg-accent);        /* foco / progreso */
+  --jf-palette-secondary-contrastText: #fff;
+  --jf-palette-text-primary: rgba(255, 255, 255, 0.96);
+  --jf-palette-text-secondary: rgba(255, 255, 255, 0.72);
+  --jf-palette-divider: var(--lg-hairline);
+  --jf-palette-action-hover: rgba(255, 255, 255, 0.1);
+  --jf-palette-AppBar-defaultBg: transparent;
+  --jf-palette-AppBar-transparentBg: transparent;
+  --jf-palette-Button-inheritContainedBg: rgba(255, 255, 255, 0.1);
+  --jf-palette-Button-inheritContainedHoverBg: var(--lg-bg-hover);
+  --jf-palette-FilledInput-bg: rgba(255, 255, 255, 0.08);
+  --jf-palette-FilledInput-borderColor: var(--lg-hairline);
+  --jf-card-borderRadius: var(--lg-r-card);
+}
+
+/* 3. BASE ────────────────────────────────────────────────── */
+html,
+body,
+button,
+input,
+select,
+textarea,
+.emby-button {
+  font-family: var(--lg-font) !important;
+}
+
+h1, h2, h3,
+.sectionTitle,
+.itemName {
+  letter-spacing: -0.02em;
+  font-weight: 650;
+}
+
+.itemName,
+.detailPagePrimaryContainer,
+.skinHeader {
+  text-shadow: var(--lg-text-shadow);
+}
+
+/* Superficies del navegador: también llevan el tema */
+::selection {
+  background: rgba(10, 132, 255, 0.45);
+  color: #fff;
+}
+:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 2px;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+/* 4. SUPERFICIES GLASS (compartido) ─────────────────────── */
+.MuiAppBar-root.MuiAppBar-positionFixed,
+.MuiDrawer-paper,
+.MuiMenu-paper,
+.MuiPopover-paper,
+.skinHeader.skinHeader-withBackground,
+.skinHeader.semiTransparent,
+.mainDrawer,
+.dialog:not(.dialog-fullscreen),
+.actionSheet,
+.osdControls,
+#loginPage .manualLoginForm,
+#loginPage .visualLoginForm {
+  background: var(--lg-bg) !important;
+  -webkit-backdrop-filter: var(--lg-filter) !important;
+  backdrop-filter: var(--lg-filter) !important;
+  border: 1px solid var(--lg-border-color);
+  box-shadow: var(--lg-shadow);
+  isolation: isolate; /* evita artefactos de recorte de backdrop-filter en Safari */
+}
+
+/* 5. HEADER FLOTANTE ─────────────────────────────────────── */
+/* Jellyfin 12 (layout por defecto): AppBar de MUI → cápsula flotante */
+.MuiAppBar-root.MuiAppBar-positionFixed {
+  top: var(--lg-gap);
+  left: var(--lg-gap);
+  right: var(--lg-gap);
+  width: auto;
+  border-radius: var(--lg-r-panel); /* panel, no pill: en bibliotecas crece a 2 filas */
+}
+/* En el reproductor el AppBar queda vacío: sin esto se ve una línea */
+.MuiAppBar-root:empty {
+  display: none;
+}
+/* La cápsula baja --lg-gap: el spacer de MUI (div tras el AppBar) mide lo que el header,
+   así que se le suma el hueco ahí y funciona igual con 1 o 2 filas. */
+.MuiAppBar-root + div {
+  margin-bottom: calc(var(--lg-gap) * 2.5);
+}
+/* En detalles el backdrop sí va bajo la cápsula (look cinematográfico) */
+:has(> main .itemDetailPage:not(.hide)) > .MuiAppBar-root + div {
+  margin-bottom: 0;
+}
+
+/* Layout clásico (legacy): .skinHeader */
+.skinHeader {
+  top: var(--lg-gap);
+  left: var(--lg-gap);
+  right: var(--lg-gap);
+  border-radius: var(--lg-r-panel);
+  transition: transform var(--lg-dur) var(--lg-spring), background 0.3s ease;
+}
+
+/* Al ocultarse con el scroll, salir también del margen superior */
+.skinHeader.headroom--unpinned {
+  transform: translateY(calc(-100% - 2 * var(--lg-gap)));
+}
+
+/* El header del reproductor conserva su degradado nativo, sin cápsula */
+.skinHeader.osdHeader {
+  top: 0;
+  left: 0;
+  right: 0;
+  border-radius: 0;
+}
+.skinHeader-withBackground.osdHeader {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 0;
+  box-shadow: none;
+}
+
+.headerTabs .emby-tab-button {
+  border-radius: var(--lg-r-pill);
+}
+
+/* 6. MENÚ LATERAL (sidebar flotante estilo iPadOS) ───────── */
+/* Jellyfin 12: Drawer de MUI */
+.MuiDrawer-paperAnchorLeft {
+  top: var(--lg-gap) !important;
+  bottom: var(--lg-gap) !important;
+  left: var(--lg-gap) !important;
+  height: auto !important;
+  border-radius: var(--lg-r-panel);
+}
+.MuiDrawer-paper .MuiListItemButton-root {
+  border-radius: var(--lg-r-pill);
+  margin: 2px 10px;
+}
+.MuiMenu-paper,
+.MuiPopover-paper {
+  border-radius: var(--lg-r-card) !important;
+}
+
+/* Layout clásico (legacy): .mainDrawer */
+.mainDrawer {
+  top: var(--lg-gap) !important;
+  bottom: var(--lg-gap) !important;
+  border-radius: var(--lg-r-panel);
+  overflow: hidden;
+}
+.mainDrawer.drawer-open {
+  left: var(--lg-gap);
+}
+.navMenuOption {
+  border-radius: var(--lg-r-pill);
+  margin: 2px 10px;
+}
+
+/* 7. TARJETAS Y PÓSTERS ──────────────────────────────────── */
+.cardScalable {
+  border-radius: var(--lg-r-card);
+  transition: transform var(--lg-dur) var(--lg-spring), box-shadow var(--lg-dur) var(--lg-spring);
+}
+
+/* Borde especular fino sobre la imagen */
+.cardScalable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--lg-hairline);
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .card:hover .cardScalable {
+    transform: scale(var(--lg-hover-scale));
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  }
+}
+
+.cardOverlayContainer {
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.55));
+}
+
+/* Botones del hover (visto, favorito, más): Jellyfin los deja 33×39 → círculos iguales */
+.cardOverlayContainer .MuiButtonGroup-root > .MuiIconButton-root {
+  width: 2.2em;
+  height: 2.2em;
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* Progreso: cápsula delgada translúcida */
+.itemProgressBar {
+  height: 4px;
+  border-radius: var(--lg-r-pill);
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+}
+.cardScalable .itemProgressBar,
+.cardImageContainer .itemProgressBar {
+  margin: 0 10px 10px;
+}
+.itemProgressBarForeground {
+  background: var(--lg-accent) !important;
+  border-radius: inherit;
+}
+
+/* 8. PÁGINA DE DETALLES ──────────────────────────────────── */
+.itemBackdrop {
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+}
+.itemBackdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}
+
+.detailRibbon {
+  background: transparent !important;
+}
+
+/* Metadatos (año, duración, rating, 4K/HDR) como pills de vidrio */
+.itemMiscInfo .mediaInfoItem,
+.itemMiscInfo .mediaInfoOfficialRating {
+  padding: 0.2em 0.75em;
+  border-radius: var(--lg-r-pill);
+  border: 1px solid var(--lg-hairline);
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: var(--lg-filter-sm);
+  backdrop-filter: var(--lg-filter-sm);
+}
+
+/* Botones de acción: círculos separados, "Reproducir" blanco sólido, el resto glass */
+.mainDetailButtons .detailButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25em;
+  height: 3.25em;
+  padding: 0;
+  margin: 0 0.35em !important; /* layout-mobile lo pone en 0 */
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--lg-hairline);
+  -webkit-backdrop-filter: var(--lg-filter-sm);
+  backdrop-filter: var(--lg-filter-sm);
+  transition: transform var(--lg-dur) var(--lg-spring), background 0.2s ease;
+}
+.mainDetailButtons .detailButton:hover {
+  background: var(--lg-bg-hover);
+  transform: scale(var(--lg-hover-scale));
+}
+.mainDetailButtons .btnPlay {
+  background: var(--lg-white);
+  color: #000;
+}
+.mainDetailButtons .btnPlay:hover {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+/* 9. REPRODUCTOR (OSD) ───────────────────────────────────── */
+.videoOsdBottom {
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.45), transparent) !important;
+}
+.videoOsdBottom .osdControls {
+  max-width: 64em;
+  margin: 0 auto var(--lg-gap);
+  padding: 0.6em 1.2em;
+  border-radius: var(--lg-r-panel);
+}
+.videoOsdBottom .paper-icon-button-light {
+  border-radius: 50%;
+  transition: background 0.2s ease, transform var(--lg-dur) var(--lg-spring);
+}
+.videoOsdBottom .paper-icon-button-light:hover {
+  background: var(--lg-bg-hover);
+  transform: scale(1.08);
+}
+
+/* 10. LOGIN ──────────────────────────────────────────────── */
+#loginPage .manualLoginForm,
+#loginPage .visualLoginForm {
+  max-width: 26em;
+  padding: 2em;
+  border-radius: var(--lg-r-panel);
+}
+
+/* 11. BOTONES, INPUTS, DIÁLOGOS ──────────────────────────── */
+.MuiButton-root {
+  border-radius: var(--lg-r-pill) !important;
+  text-transform: none;
+  font-weight: 600;
+  box-shadow: none !important;
+}
+
+/* ButtonGroup de MUI (ej. "Play All" + aleatorio): pills separadas, no un bloque */
+.MuiButtonGroup-root {
+  gap: 0.5em;
+  box-shadow: none !important;
+}
+.MuiButtonGroup-root > .MuiButton-root {
+  border: 0 !important;
+}
+.MuiButtonGroup-root > .MuiButton-root:not(:first-child) {
+  min-width: 2.6em;
+  padding-inline: 0.6em;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--lg-white);
+  box-shadow: inset 0 0 0 1px var(--lg-hairline) !important;
+  -webkit-backdrop-filter: var(--lg-filter-sm);
+  backdrop-filter: var(--lg-filter-sm);
+}
+.MuiButtonGroup-root > .MuiButton-root:not(:first-child):hover {
+  background: var(--lg-bg-hover);
+}
+
+.button-submit,
+.emby-button.raised,
+.fab {
+  border-radius: var(--lg-r-pill);
+  transition: transform var(--lg-dur) var(--lg-spring), background 0.2s ease;
+}
+.emby-input,
+.emby-textarea,
+.emby-select-withcolor {
+  border-radius: 12px;
+}
+.dialog:not(.dialog-fullscreen),
+.actionSheet {
+  border-radius: var(--lg-r-panel);
+}
+.formDialogHeader:not(.formDialogHeader-clear),
+.formDialogFooter:not(.formDialogFooter-clear) {
+  background: transparent !important;
+}
+
+/* Media Bar (plugin de terceros): sus clases cambian entre versiones,
+   no se estilizan aquí para no inventar selectores. */
+
+/* 12. ACCESIBILIDAD ──────────────────────────────────────── */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --lg-bg: rgba(28, 28, 30, 0.97);
+    --lg-filter: none;
+    --lg-filter-sm: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --lg-dur: 0s;
+    --lg-hover-scale: 1;
+  }
+}

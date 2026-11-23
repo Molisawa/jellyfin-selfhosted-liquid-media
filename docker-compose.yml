@@ -1,0 +1,149 @@
+# Stack multimedia portable: macOS (dev) -> Windows WSL2 (prod) -> Linux.
+# GPU: añadir -f docker-compose.nvidia.yml (WSL2/Linux) o -f docker-compose.intel.yml (Linux).
+
+x-env: &env
+  PUID: ${PUID:-1000}
+  PGID: ${PGID:-1000}
+  TZ: ${TZ:-Etc/UTC}
+
+x-qbittorrent: &qbittorrent
+  image: linuxserver/qbittorrent:latest
+  environment:
+    <<: *env
+    WEBUI_PORT: 8080
+    TORRENTING_PORT: 6881
+  volumes:
+    - qbittorrent_config:/config
+    - ${MEDIA_PATH:?define MEDIA_PATH en .env}:/data
+  restart: unless-stopped
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      DOMAIN: ${DOMAIN:?define DOMAIN en .env}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./theme:/srv/theme:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [media_net]
+    restart: unless-stopped
+
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    environment:
+      <<: *env
+    volumes:
+      - jellyfin_config:/config
+      - ${MEDIA_PATH:?define MEDIA_PATH en .env}/media:/data/media:ro
+    ports:
+      - "${LAN_BIND_IP:-127.0.0.1}:8096:8096" # acceso LAN directo (TVs, apps)
+    networks: [media_net]
+    restart: unless-stopped
+
+  # Seerr = sucesor oficial de Jellyseerr (fusión Jellyseerr + Overseerr, 2026).
+  seerr:
+    image: seerr/seerr:latest
+    init: true
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - seerr_config:/app/config
+    networks: [media_net]
+    restart: unless-stopped
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    environment:
+      <<: *env
+    volumes:
+      - sonarr_config:/config
+      - ${MEDIA_PATH:?define MEDIA_PATH en .env}:/data
+    ports:
+      - "${LAN_BIND_IP:-127.0.0.1}:8989:8989"
+    networks: [media_net]
+    restart: unless-stopped
+
+  radarr:
+    image: linuxserver/radarr:latest
+    environment:
+      <<: *env
+    volumes:
+      - radarr_config:/config
+      - ${MEDIA_PATH:?define MEDIA_PATH en .env}:/data
+    ports:
+      - "${LAN_BIND_IP:-127.0.0.1}:7878:7878"
+    networks: [media_net]
+    restart: unless-stopped
+
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    environment:
+      <<: *env
+    volumes:
+      - prowlarr_config:/config
+    ports:
+      - "${LAN_BIND_IP:-127.0.0.1}:9696:9696"
+    networks: [media_net]
+    restart: unless-stopped
+
+  # --- Descargas: activa UNO vía COMPOSE_PROFILES en .env (novpn | vpn) ---
+  # En ambos casos Sonarr/Radarr lo encuentran en http://qbittorrent:8080
+
+  qbittorrent:
+    <<: *qbittorrent
+    profiles: [novpn]
+    ports:
+      - "${LAN_BIND_IP:-127.0.0.1}:8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+    networks: [media_net]
+
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    profiles: [vpn]
+    cap_add: [NET_ADMIN]
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER:-}
+      VPN_TYPE: ${VPN_TYPE:-wireguard}
+      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY:-}
+      WIREGUARD_ADDRESSES: ${WIREGUARD_ADDRESSES:-}
+      SERVER_COUNTRIES: ${SERVER_COUNTRIES:-}
+    ports:
+      - "${LAN_BIND_IP:-127.0.0.1}:8080:8080" # WebUI de qBittorrent
+    networks:
+      media_net:
+        aliases: [qbittorrent] # mismo hostname que sin VPN
+    restart: unless-stopped
+
+  qbittorrent-vpn:
+    <<: *qbittorrent
+    profiles: [vpn]
+    network_mode: service:gluetun # todo el tráfico sale por la VPN (kill switch de Gluetun)
+    depends_on:
+      gluetun:
+        condition: service_healthy
+
+networks:
+  media_net:
+    driver: bridge
+
+# Volúmenes nombrados: SQLite fuera de NTFS (evita corrupción/lentitud en WSL2).
+volumes:
+  caddy_data:
+  caddy_config:
+  jellyfin_config:
+  seerr_config:
+  sonarr_config:
+  radarr_config:
+  prowlarr_config:
+  qbittorrent_config:

@@ -4,13 +4,14 @@ Servidor multimedia self-hosted con **Jellyfin**, automatización ***arr** y **C
 `docker compose`, más **Liquid Glass**: un tema CSS para Jellyfin inspirado en el vidrio translúcido de
 los sistemas de Apple.
 
-Se desarrolla en macOS y corre en producción en Windows (WSL2) o Linux, con el mismo código.
+Funciona en **macOS** y en **Windows** (WSL2), y también en Linux, con los mismos archivos: solo cambia tu
+`.env`.
 
 ![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)
 ![Jellyfin 12.4](https://img.shields.io/badge/Jellyfin-12.4-00A4DC?logo=jellyfin&logoColor=white)
 ![Caddy 2](https://img.shields.io/badge/Caddy-2-1F88C0?logo=caddy&logoColor=white)
 ![amd64 · arm64](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-555)
-![macOS · Windows WSL2 · Linux](https://img.shields.io/badge/host-macOS%20%7C%20Windows%20WSL2%20%7C%20Linux-555)
+![macOS · Windows · Linux](https://img.shields.io/badge/host-macOS%20%7C%20Windows%20%7C%20Linux-555)
 
 ![Inicio de Jellyfin con el tema Liquid Glass](docs/screenshots/home.png)
 
@@ -25,6 +26,33 @@ Se desarrolla en macOS y corre en producción en Windows (WSL2) o Linux, con el 
 | **qBittorrent** | Cliente de descargas, opcionalmente detrás de **Gluetun** (VPN) | Solo LAN (`:8080`) |
 | **Caddy** | Reverse proxy con HTTPS automático | Puertos 80/443 |
 
+## Instalación
+
+Elige tu sistema. Cada guía cubre requisitos, disco de media, hardlinks y el primer arranque:
+
+| Sistema | Guía |
+|---|---|
+| **macOS** (Apple Silicon o Intel) | [docs/despliegue-mac.md](docs/despliegue-mac.md) |
+| **Windows 10/11** (WSL2) | [docs/despliegue-windows.md](docs/despliegue-windows.md) |
+
+Después, en los dos sistemas: **[docs/configuracion.md](docs/configuracion.md)**, con la configuración de
+cada app, el acceso remoto con tu dominio (con IP pública o detrás de CGNAT) y los respaldos.
+
+En resumen, con Docker instalado (en Windows, desde la terminal de Ubuntu/WSL):
+
+```bash
+git clone https://github.com/Molisawa/jellyfin-selfhosted-liquid-media.git
+cd jellyfin-selfhosted-liquid-media
+cp .env.example .env        # ajusta MEDIA_PATH, DOMAIN, etc.
+docker compose up -d
+```
+
+| Opcional | Cómo |
+|---|---|
+| qBittorrent detrás de VPN | `COMPOSE_PROFILES=vpn` y las variables de Gluetun en `.env` |
+| GPU NVIDIA (Windows / Linux) | `docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d` |
+| Intel QuickSync (Linux) | `docker compose -f docker-compose.yml -f docker-compose.intel.yml up -d` |
+
 ## Arquitectura
 
 ```mermaid
@@ -34,57 +62,17 @@ flowchart LR
     caddy -->|request.| seerr[Seerr]
     lan((LAN)) -.->|paneles admin| arr[Sonarr · Radarr · Prowlarr · qBittorrent]
     seerr --> arr
-    arr --> data[("${MEDIA_PATH}<br/>torrents/ + media/")]
+    arr --> data[("MEDIA_PATH<br/>torrents/ + media/")]
     jellyfin -->|solo lectura| data
 ```
 
 - **Solo Jellyfin y Seerr salen a internet.** Los paneles de administración se publican en la IP que elijas
   (`LAN_BIND_IP`) y nunca se abren en el router.
-- **Hardlinks:** descargas y biblioteca cuelgan de una sola raíz (`${MEDIA_PATH}` → `/data`), así que importar
+- **Hardlinks:** descargas y biblioteca cuelgan de una sola raíz (`MEDIA_PATH` → `/data`), así que importar
   no duplica espacio.
-- **Config en volúmenes nombrados:** las bases SQLite viven en el filesystem de Docker, no en NTFS, lo que
-  evita la corrupción típica en WSL2.
+- **Config en volúmenes nombrados:** las bases SQLite viven en el filesystem de Docker y no en el disco del
+  sistema, lo que evita la corrupción típica de SQLite en NTFS/WSL2.
 - **Cero datos personales en el repo:** dominio, rutas, IDs y claves salen de `.env`, que está ignorado.
-
-## Inicio rápido (macOS / Linux)
-
-Requisitos: Docker Desktop (o Docker Engine con Compose v2).
-
-```bash
-git clone https://github.com/Molisawa/jellyfin-selfhosted-liquid-media.git
-cd jellyfin-selfhosted-liquid-media
-cp .env.example .env
-mkdir -p dev-data/{torrents/{movies,tv},media/{movies,tv}}
-docker compose up -d
-```
-
-Con `DOMAIN=localhost` (valor por defecto) tienes:
-
-- Jellyfin en `https://watch.localhost` y Seerr en `https://request.localhost`, con TLS local de Caddy. Para
-  que el navegador confíe en el certificado:
-  ```bash
-  docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./caddy-root.crt
-  sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain caddy-root.crt
-  ```
-- Sonarr `localhost:8989` · Radarr `localhost:7878` · Prowlarr `localhost:9696` · qBittorrent `localhost:8080`.
-
-Opciones extra:
-
-| Quieres | Cómo |
-|---|---|
-| qBittorrent detrás de VPN | `COMPOSE_PROFILES=vpn` y las variables de Gluetun en `.env` |
-| GPU NVIDIA (WSL2 / Linux) | `docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d` |
-| Intel QuickSync (Linux) | `docker compose -f docker-compose.yml -f docker-compose.intel.yml up -d` |
-
-## Producción y acceso remoto
-
-**[docs/despliegue-windows.md](docs/despliegue-windows.md)** cubre todo el paso a producción:
-
-- Windows + WSL2 y cómo elegir el disco para que funcionen los hardlinks.
-- GPU NVIDIA.
-- Configuración de cada app en orden.
-- Acceso remoto con dominio, tanto con IP pública como **detrás de CGNAT** (túnel WireGuard a un VPS,
-  con el HTTPS terminando en tu Caddy).
 
 ## Tema Liquid Glass
 
@@ -146,7 +134,9 @@ Todos los valores están como tokens en `:root`, al inicio del archivo:
 ├── caddy/Caddyfile              # proxy: watch. y request., más el tema en /custom-theme/
 ├── theme/liquid-glass.css       # tema Liquid Glass
 └── docs/
-    ├── despliegue-windows.md    # producción, hardlinks y acceso remoto
+    ├── despliegue-mac.md        # instalación en macOS
+    ├── despliegue-windows.md    # instalación en Windows (WSL2)
+    ├── configuracion.md         # apps, acceso remoto, seguridad y respaldos
     └── screenshots/
 ```
 

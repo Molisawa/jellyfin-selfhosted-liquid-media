@@ -1,4 +1,4 @@
-# Stack multimedia portable: macOS (dev) -> Windows WSL2 (prod) -> Linux.
+# Stack multimedia portable: macOS, Windows (WSL2) o Linux con el mismo archivo.
 # GPU: añadir -f docker-compose.nvidia.yml (WSL2/Linux) o -f docker-compose.intel.yml (Linux).
 
 x-env: &env

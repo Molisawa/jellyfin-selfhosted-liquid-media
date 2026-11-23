@@ -96,11 +96,12 @@ Web 12.4.
 
 ### Cargarlo
 
-**Con este stack (recomendado):** Caddy sirve la carpeta `theme/` en vivo. En Jellyfin, ve a
+**Con este stack (recomendado):** Jellyfin sirve la carpeta `theme/` en vivo en `/web/custom-theme/`, así que
+el tema carga igual por tu dominio que por `http://<IP-LAN>:8096`. En Jellyfin, ve a
 *Panel → General → CSS personalizado* y pega:
 
 ```css
-@import url("/custom-theme/liquid-glass.css");
+@import url("/web/custom-theme/liquid-glass.css");
 ```
 
 Cada cambio al archivo se ve con solo recargar el navegador.
@@ -131,7 +132,7 @@ Todos los valores están como tokens en `:root`, al inicio del archivo:
 ├── docker-compose.nvidia.yml    # override GPU NVIDIA
 ├── docker-compose.intel.yml     # override Intel QuickSync (Linux)
 ├── .env.example                 # plantilla de configuración (copiar a .env)
-├── caddy/Caddyfile              # proxy: watch. y request., más el tema en /custom-theme/
+├── caddy/Caddyfile              # proxy: watch. (Jellyfin) y request. (Seerr)
 ├── theme/liquid-glass.css       # tema Liquid Glass
 └── docs/
     ├── despliegue-mac.md        # instalación en macOS

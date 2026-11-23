@@ -29,7 +29,6 @@ services:
       - "443:443/udp" # HTTP/3
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./theme:/srv/theme:ro
       - caddy_data:/data
       - caddy_config:/config
     networks: [media_net]
@@ -42,6 +41,8 @@ services:
     volumes:
       - jellyfin_config:/config
       - ${MEDIA_PATH:?define MEDIA_PATH en .env}/media:/data/media:ro
+      # Tema servido por el propio Jellyfin en /web/custom-theme/: funciona por Caddy y por la IP LAN
+      - ./theme:/usr/share/jellyfin/web/custom-theme:ro
     ports:
       - "${LAN_BIND_IP:-127.0.0.1}:8096:8096" # acceso LAN directo (TVs, apps)
     networks: [media_net]

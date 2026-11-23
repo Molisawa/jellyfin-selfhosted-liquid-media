@@ -28,7 +28,7 @@ Todas se hablan por nombre de contenedor dentro de `media_net`. **Nunca** uses `
 4. **Jellyfin** — `https://watch.<tu-dominio>` o `http://<IP-LAN>:8096`.
    - Bibliotecas: `/data/media/movies` y `/data/media/tv`.
    - *Panel → Redes*: **Proxies conocidos** = `caddy`; *Permitir conexiones remotas* activado.
-   - Tema: *Panel → General → CSS personalizado*: `@import url("/custom-theme/liquid-glass.css");`
+   - Tema: *Panel → General → CSS personalizado*: `@import url("/web/custom-theme/liquid-glass.css");`
 5. **Seerr** — `https://request.<tu-dominio>`. Conéctalo a Jellyfin en `http://jellyfin:8096`, y a Sonarr y
    Radarr por sus nombres internos.
 
